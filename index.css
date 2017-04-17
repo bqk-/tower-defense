@@ -1,0 +1,50 @@
+#menu
+{
+    float:left;
+    padding: 10px;
+    background-color: #2d2d2d;
+    border:2px solid #6D98BA;
+    border-radius: 3px;
+    color:white;
+    width: 300px;
+    font-family: 'verdana';
+    font-size: 15px; 
+}
+
+#menu img
+{
+    padding: 5px;
+    margin: 2px;
+    border: 2px solid #6D98BA;
+    border-radius: 2px;
+}
+
+#menu img.selected-menu
+{
+    background-color:  #6D98BA;
+}
+
+#menu #details
+{
+    height: 150px;
+}
+
+#menu #stats
+{
+    height: 150px;
+}
+
+#menu img.icon
+{
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    width: 24px;
+    height: 24px;
+}
+
+#game
+{
+    float:left;
+}
