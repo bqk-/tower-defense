@@ -71,6 +71,8 @@ function setUpMenu()
         img.src = 'img/' + data.towers[i].Image;
         img.alt = data.towers[i].Name;
         img.dataset.key = data.towers[i].Key; 
+        img.dataset.range = data.towers[i].Range;
+        img.dataset.price = data.towers[i].Price;
         img.onclick = function(e) {
                     displayStats(e);
             };
@@ -118,6 +120,7 @@ function showTowerStats(x, y)
                '<b>Kills:</b> ' + tower.kills + '</div>';
     var details = document.getElementById('stats');
     details.innerHTML = html;
+
 }
 
 function updateTowerStats(uid, x, y)
@@ -247,8 +250,8 @@ function shootAtMonsters(tower)
 function shootAt(tower, monster)
 {
     var g = game.add.graphics(0, 0);
-    g.beginFill(tower.bulletColor, 2);
-    g.drawCircle(0, 0, 3); //relative
+    g.beginFill(tower.bulletColor, 1);
+    g.drawCircle(0, 0, 4); //relative
 
     var bullet = game.add.sprite(tower.x, tower.y);
     bullet.addChild(g);
@@ -263,8 +266,8 @@ function shootAt(tower, monster)
 
 function spawn()
 {
-    var hp = 50 + (Math.pow(level, 2) * 40);
-    var value = 2 + (level);
+    var hp = 50 + (Math.pow(0.5 * level, 1.5) * 40);
+    var value = 1 + (level * 2);
     var type = data.monsters[level % 7];
     for (var i = 0; i < 20; i++) 
     {
@@ -431,6 +434,7 @@ function nextRound()
 {
     timer.start(INTERVAL);
     level++;
+    money += level * 20;
     spawn();
 }
 
@@ -455,6 +459,18 @@ function handleMouse()
             var sprite = game.add.sprite(6, 6, currentSelection.dataset.key);
             sprite.scale.set(0.6, 0.6);
             marker.addChild(sprite);
+
+            var range = game.add.graphics(0, 0);
+            if(currentSelection.dataset.price <= money)
+            {
+                range.lineStyle(1, 0x00FF00, 1);
+            }
+            else
+            {
+                range.lineStyle(1, 0xFF0000, 1);
+            }
+            range.drawCircle(16, 16, currentSelection.dataset.range * 2);
+            marker.addChild(range);
         }
 
         if (game.input.mousePointer.isDown && empty && currentSelection.hasAttribute('data-key'))

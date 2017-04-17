@@ -92,7 +92,7 @@
             "Key": "tower_nature",
             "BulletSpeed": 5,
             "Range": 100,
-            "Damage": 40,
+            "Damage": 50,
             "ReloadTime": 500,
             "Type": 1,
             "Targets": 2,
