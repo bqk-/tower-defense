@@ -266,8 +266,8 @@ function shootAt(tower, monster)
 
 function spawn()
 {
-    var hp = 50 + (Math.pow(0.5 * level, 1.5) * 40);
-    var value = 1 + (level * 2);
+    var hp = 50 + (Math.pow(0.6 * level, 1.6) * 40);
+    var value = Math.round(1 + (level * 1.5));
     var type = data.monsters[level % 7];
     for (var i = 0; i < 20; i++) 
     {
@@ -434,7 +434,7 @@ function nextRound()
 {
     timer.start(INTERVAL);
     level++;
-    money += level * 20;
+    money += level * 10;
     spawn();
 }
 
