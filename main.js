@@ -5,7 +5,7 @@ var VERSION = '2.6.2';
 
 //game parameters
 var LIFE_START = 50;
-var WARMUP = 30;
+var WARMUP = 15;
 var INTERVAL = 60;
 var INTERVAL_COMPLETED = 5;
 
@@ -434,7 +434,7 @@ function nextRound()
 {
     timer.start(INTERVAL);
     level++;
-    money += level * 10;
+    //money += level * 10;
     spawn();
 }
 
