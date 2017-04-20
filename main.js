@@ -13,6 +13,15 @@ var INTERVAL_COMPLETED = 5;
 var SINGLE_TARGET = 0;
 var AREA_TARGET = 1;
 
+//ABILITIES
+var SLOW = 1;
+var STUN = 2;
+var DOT = 4;
+
+var STUN_TEXT = "1 sec stun (30%)"
+var SLOW_TEXT = "3 sec slow (30%)"
+var DOT_TEXT = "+30% damage over time (50%)"
+
 //useful stuff
 var UID = 1;
 
@@ -72,7 +81,7 @@ function setUpMenu()
         img.alt = data.towers[i].Name;
         img.dataset.key = data.towers[i].Key; 
         img.dataset.range = data.towers[i].Range;
-        img.dataset.price = data.towers[i].Price;
+        img.dataset.price = data.towers[i].Price[0];
         img.onclick = function(e) {
                     displayStats(e);
             };
@@ -97,13 +106,14 @@ function displayStats(e)
     var tower = data.towers.find(x => x.Key == e.target.dataset.key);
     e.target.className += "selected-menu";
     var html = '<b>Name:</b> ' + tower.Name + '<br>' +
-               '<b>Damage:</b> ' + tower.Damage + '<br>' +
+               '<b>Damage:</b> ' + tower.Damage[0] + '<br>' +
                '<b>Type:</b> ' + typeToString(tower.Type) + '<br>' +
                '<b>Targets:</b> ' + tower.Targets + '<br>' +
                '<b>Range:</b> ' + tower.Range + '<br>' +
-               '<b>Attack speed:</b> ' + (Math.round(1000 / tower.ReloadTime * 100) / 100) + '<br>' +
+               '<b>Attack speed:</b> ' + (Math.round(1000 / tower.ReloadTime[0] * 100) / 100) + '<br>' +
+               '<b>Ability:</b> ' + abilityToString(tower.Ability) + '<br>' +
                '<br>' +
-               '<img src="img/coin.png" class="icon" /> ' + tower.Price + '<br>';
+               '<span class="price"><img src="img/coin.png" class="icon" /> ' + tower.Price[0] + '</span>';
    var details = document.getElementById('details');
    details.innerHTML = html;
 }
@@ -111,16 +121,41 @@ function displayStats(e)
 function showTowerStats(x, y)
 {
     var tower = buildings[x + "_" + y];
-    var html = '<div data-uid="' + tower.idx + '"><b>Name:</b> ' + tower.name + '<br>' +
-               '<b>Damage:</b> ' + tower.damage + '<br>' +
+    var dataTower = data.towers.find(x => x.Key == tower.key);
+
+    if(tower.level < 5)
+    {
+        var html = '<div data-uid="' + tower.idx + '"><b>Name:</b> ' + tower.name + '<br>' +
+               '<b>Damage:</b> ' + tower.damage + ' <span class="next">' + dataTower.Damage[tower.level] + '</span><br>' +
                '<b>Type:</b> ' + typeToString(tower.type) + '<br>' +
                '<b>Range:</b> ' + tower.range + '<br>' +
-               '<b>Attack speed:</b> ' + (Math.round(1000 / tower.reloadTime * 100) / 100) + '<br>' +
+               '<b>Attack speed:</b> ' + (Math.round(1000 / tower.reloadTime * 100) / 100) + ' <span class="next">' + 
+               (Math.round(1000 / dataTower.ReloadTime[tower.level] * 100) / 100) + '</span><br>' +
+               '<b>Ability:</b> ' + abilityToString(tower.ability) + '<br>' +
                '<br>' +
-               '<b>Kills:</b> ' + tower.kills + '</div>';
+               '<b>Kills:</b> <span id="kills">' + tower.kills + '</span><br>' +
+               '<img src="img/up.png" id="level-up" '+
+               'onmouseover="previewUpgrade(' + x + ',' + y + ', \'' + tower.key + '\')" '+
+               'onmouseout="stopPreview()" '+
+               'onclick="upgradeTower(' + x + ',' + y + ', \'' + tower.key + '\')" />' +
+               '<span class="price"><img src="img/coin.png" class="icon" /> ' + dataTower.Price[tower.level] + '</span>' +
+               '</div>';
+    }
+    else
+    {
+        var html = '<div data-uid="' + tower.idx + '"><b>Name:</b> ' + tower.name + '<br>' +
+           '<b>Damage:</b> ' + tower.damage + '<br>' +
+           '<b>Type:</b> ' + typeToString(tower.type) + '<br>' +
+           '<b>Range:</b> ' + tower.range + '<br>' +
+           '<b>Attack speed:</b> ' + (Math.round(1000 / tower.reloadTime * 100) / 100) + '<br>' +
+           '<b>Ability:</b> ' + abilityToString(tower.ability) + '<br>' +
+           '<br>' +
+           '<b>Kills:</b> <span id="kills">' + tower.kills + '</span>' +
+           '</div>';
+    }
+
     var details = document.getElementById('stats');
     details.innerHTML = html;
-
 }
 
 function updateTowerStats(uid, x, y)
@@ -128,7 +163,9 @@ function updateTowerStats(uid, x, y)
     var e = document.querySelector('[data-uid="' + uid + '"]');
     if(e != null)
     {
-        showTowerStats(x, y);
+        var tower = buildings[x + "_" + y];
+        var k = document.getElementById("kills");
+        k.innerHTML = tower.kills;
     }
 }
 
@@ -140,6 +177,22 @@ function typeToString(type)
             return "Single target";
         case AREA_TARGET:
             return "Area damage";
+    }
+}
+
+function abilityToString(ability)
+{
+    switch(ability)
+    {
+        case SLOW:
+            return SLOW_TEXT;
+        case STUN:
+            return STUN_TEXT;
+        case DOT:
+            return DOT_TEXT;
+
+        default:
+            return "None";
     }
 }
 
@@ -173,7 +226,7 @@ function create() {
     var static = game.add.text(630, 190, "Next wave in", { fontWeight: 'bolder'});
     static.addColor('white', 0);
 
-    countdown = game.add.text(667, 225, INTERVAL + " sec", { fontWeight: 'bolder'});
+    countdown = game.add.text(667, 225, WARMUP + " sec", { fontWeight: 'bolder'});
     countdown.addColor('white', 0);
 
     //create groups
@@ -181,9 +234,15 @@ function create() {
     bullets = game.add.group();
     bars = game.add.group();
 
-    timer = new Timer(game, 1000, countdown, INTERVAL);
+    timer = new Timer(game, 1000, countdown);
     timer.start(WARMUP);
     //drawChecks();
+
+    //special abilities handler
+    game.time.events.loop(250, function(){
+        updateAbilities();
+    }, this);
+
 
     marker = game.add.graphics();
     marker.lineStyle(2, 0x000000, 1);
@@ -193,7 +252,7 @@ function create() {
 function buildTower(x, y, key)
 {
     var tower = data.towers.find(x => x.Key == key);
-    if(money < tower.Price)
+    if(money < tower.Price[0])
     {
         return;
     }
@@ -201,21 +260,95 @@ function buildTower(x, y, key)
     var sprite = game.add.sprite(x, y, tower.Key);
     sprite.scale.set(0.6, 0.6);
     sprite.idx = UID++;
+    sprite.key = tower.Key;
     sprite.name = tower.Name;
     sprite.speed = tower.BulletSpeed;
     sprite.range = tower.Range;
-    sprite.damage = tower.Damage;
+    sprite.damage = tower.Damage[0];
+    sprite.ability = tower.Ability;
     sprite.anchor.set(0.5, 0.5);
-    sprite.reloadTime = tower.ReloadTime;
+    sprite.reloadTime = tower.ReloadTime[0];
     sprite.reload = 0; //ready to shoot
     sprite.type = tower.Type;
     sprite.bulletColor = tower.BulletColor;
     sprite.kills = 0;
     sprite.targets = tower.Targets;
+    sprite.level = 1;
 
-    money -= tower.Price;
+    money -= tower.Price[0];
     towers.add(sprite);
     buildings[x + "_" + y] = sprite;
+
+    showTowerStats(x, y);
+}
+
+function upgradeTower(x, y, key)
+{
+    var sprite = buildings[x + "_" + y];
+    var tower = data.towers.find(x => x.Key == key);
+    if(typeof sprite === 'undefined')
+    {
+        return;
+    }
+
+    if(sprite.level > 4)
+    {
+        return;
+    }
+
+    if(money < tower.Price[sprite.level])
+    {
+        return;
+    }
+
+    sprite.damage = tower.Damage[sprite.level];
+    sprite.reloadTime = tower.ReloadTime[sprite.level];
+    //sprite.levelSprite = 
+    
+    money -= tower.Price[sprite.level];
+    sprite.level++; 
+
+    showTowerStats(x, y);
+}
+
+function previewUpgrade(x, y, key)
+{
+    var sprite = buildings[x + "_" + y];
+    var tower = data.towers.find(x => x.Key == key);
+    if(typeof sprite === 'undefined')
+    {
+        return;
+    }
+
+    if(sprite.level > 4)
+    {
+        return;
+    }
+    var e = document.getElementById('level-up');
+    if(money < tower.Price[sprite.level])
+    {
+        e.style.borderColor = "red";
+    }
+    else
+    {
+        e.style.borderColor = "green";
+    }
+
+    var prev = document.getElementsByClassName("next");
+    [].forEach.call(prev, function(e){
+        e.style.display = "inline";
+    });
+}
+
+function stopPreview()
+{
+    var e = document.getElementById('level-up');
+    e.style.borderColor = "#6D98BA";
+
+    var prev = document.getElementsByClassName("next");
+    [].forEach.call(prev, function(e){
+        e.style.display = "none";
+    });
 }
 
 function shootAtMonsters(tower)
@@ -283,6 +416,16 @@ function spawnOne(hp, value, type)
     sprite.hp = hp;
     sprite.maxHp = hp;
     sprite.speed = 0.5;
+    
+    sprite.slow = null;
+    sprite.slowRestore = 0.5;
+
+    sprite.stun = null;
+
+    sprite.dot = null;
+    sprite.dotDamage = 0;
+    sprite.dotSender = null;
+
     sprite.value = value;
     sprite.path = 0;
     sprite.anchor.set(0.5, 0.5);
@@ -319,6 +462,11 @@ function drawHP(monster)
 
 function moveOne(monster)
 {
+    if(monster.stun != null)
+    {
+        return;
+    }
+
     var from = data.path[monster.path];
     var to = data.path[monster.path + 1]
 
@@ -416,7 +564,7 @@ function updateBullet(b)
 {
     if(b.type == SINGLE_TARGET)
     {
-        var direction = [b.target.x - b.x, b.target.y - b.y];
+        var direction = [b.target.x - b.sender.x, b.target.y - b.sender.y];
 
         b.x += direction[0] * b.speed * game.time.elapsed * 0.001;
         b.y += direction[1] * b.speed * game.time.elapsed * 0.001;
@@ -425,9 +573,70 @@ function updateBullet(b)
     if(Phaser.Math.distance(b.x, b.y, b.target.x, b.target.y) <= 16)
     {
         removeHP(b.target, b.damage, b.sender);
+        applyAbilities(b.target, b.sender);
         //play explosion
         bullets.remove(b);
     }
+}
+
+function applyAbilities(target, sender)
+{
+    var dice = Math.round(Math.random() * 10);
+    if(sender.ability & SLOW && target.slow == null && (dice == 3 || dice == 6 || dice == 9))
+    {
+        target.slow = new Timer(game, 1000, null);
+        target.slow.start(3);
+        target.slowRestore = target.speed;
+        target.speed = target.speed * 0.4;
+    }
+
+    if(sender.ability & STUN && target.stun == null && (dice == 2 || dice == 5 || dice == 8))
+    {
+        target.stun = new Timer(game, 1000, null);
+        target.stun.start(1);
+    }
+
+    if(sender.ability & DOT && target.dot == null && dice % 2 == 0)
+    {
+        target.dot = new Timer(game, 1000, null);
+        target.dot.start(3);
+        target.dotDamage = sender.damage * 0.1 * 0.25;
+        target.dotSender = sender;
+    }
+}
+
+function updateAbilities()
+{
+    monsters.forEach(function(monster)
+    {
+        if(monster.dot == null && monster.stun == null && monster.slow == null)
+        {
+            return;
+        }
+
+        if(monster.dot != null)
+        {
+            console.log("dotting " + monster.dotDamage);
+            removeHP(monster, monster.dotDamage, monster.dotSender);
+
+            if(monster.dot.isOver())
+            {
+                monster.dot = null;
+                monster.dotDamage = 0;
+            }
+        }
+
+        if(monster.slow != null && monster.slow.isOver())
+        {
+            monster.speed = monster.slowRestore;
+            monster.slow = null;
+        }
+
+        if(monster.stun != null && monster.stun.isOver())
+        {
+            monster.stun = null;
+        }
+    });
 }
 
 function nextRound()
@@ -473,11 +682,11 @@ function handleMouse()
             marker.addChild(range);
         }
 
-        if (game.input.mousePointer.isDown && empty && currentSelection.hasAttribute('data-key'))
+        if (game.input.activePointer.isDown && empty && currentSelection.hasAttribute('data-key'))
         {
             buildTower(marker.x + 16, marker.y + 16, currentSelection.dataset.key);
         }
-        else if(game.input.mousePointer.isDown && !empty && !currentSelection.hasAttribute('data-key'))
+        else if(game.input.activePointer.isDown && !empty && !currentSelection.hasAttribute('data-key'))
         {
             showTowerStats(marker.x + 16, marker.y + 16);
         }
@@ -489,6 +698,7 @@ function update()
     handleMouse();
 
     monsters.forEach(moveOne);
+
     towers.forEach(shootAtMonsters);
     bullets.forEach(updateBullet);
 

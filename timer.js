@@ -1,7 +1,7 @@
 
-var Timer = function(game, refreshInt, textPh) {
+var Timer = function(game, refreshInt, ph) {
     this.game = game;
-    this.text = textPh;
+    this.text = ph;
     this.refreshInt = refreshInt;
  
     this.gameTimer = game.time.events.loop(refreshInt, function(){
@@ -21,8 +21,9 @@ Timer.prototype.updateTimer = function(){
  
     //Time remaining in seconds
     var timeRemaining = this.totalTime - this.timeElapsed; 
-
-    this.text.text = timeRemaining + " sec";
+    
+    if(this.text != null)
+        this.text.text = timeRemaining + " sec";
 
     if(timeRemaining === 0)
     {

@@ -27,11 +27,35 @@
 #menu #details
 {
     height: 150px;
+    position: relative;
+}
+
+#level-up
+{
+    position: absolute;
+    right: 3px;
+    top: 32px; 
+    width: 24px;
+    height: 24px;
+}
+
+.price
+{
+    position: absolute;
+    right: 3px;
+    top: 3px; 
+}
+
+.next 
+{
+    color: #ffcc00;
+    display: none;
 }
 
 #menu #stats
 {
-    height: 150px;
+    height: 155px;
+    position: relative;
 }
 
 #menu img.icon

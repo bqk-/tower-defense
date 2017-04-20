@@ -27,78 +27,84 @@
             "Key": "tower",
             "BulletSpeed": 6,
             "Range": 120,
-            "Damage": 16,
-            "ReloadTime": 200,
+            "Damage": [16, 28, 45, 52, 75],
+            "Ability": 2,
+            "ReloadTime": [650, 540, 430, 320, 200],
             "Type": 0,
             "Targets": 1,
             "BulletColor": 0,
             "Image": "tower.png",
-            "Price": 65
+            "Price": [65, 135, 210, 290, 400]
         },
         {
             "Name": "Earth tower",
             "Key": "tower_earth",
             "BulletSpeed": 5,
             "Range": 130,
-            "Damage": 46,
-            "ReloadTime": 500,
+            "Damage": [22, 36, 50, 68, 94],
+            "Ability": 1,
+            "ReloadTime": [600, 500, 400, 280],
             "Type": 0,
             "Targets": 1,
             "BulletColor": 16711680,
             "Image": "tower_earth.png",
-            "Price": 95
+            "Price": [90, 160, 270, 390, 500]
         },
         {
             "Name": "Electric tower",
             "Key": "tower_elec",
             "BulletSpeed": 7,
             "Range": 210,
-            "Damage": 24,
-            "ReloadTime": 300,
+            "Damage": [24, 38, 54, 74, 102],
+            "Ability": 2,
+            "ReloadTime": [400, 350, 300, 250, 200],
             "Type": 0,
             "Targets": 1,
             "BulletColor": 255,
             "Image": "tower_elec.png",
-            "Price": 125
+            "Price": [125, 180, 292, 404, 532]
         },
         {
             "Name": "Fire tower",
             "Key": "tower_fire",
             "BulletSpeed": 5,
             "Range": 160,
-            "Damage": 20,
-            "ReloadTime": 500,
+            "Damage": [18, 36, 56, 72, 112],
+            "ReloadTime": [600, 550, 450, 400, 350],
+            "Ability": 4,
             "Type": 1,
             "Targets": 3,
             "BulletColor": 16776960,
             "Image": "tower_fire.png",
-            "Price": 150
+            "Price": [125, 240, 340, 420, 510]
         },
         {
             "Name": "Magic tower",
             "Key": "tower_magic",
             "BulletSpeed": 6,
             "Range": 250,
-            "Damage": 40,
-            "ReloadTime": 600,
+            "Damage": [40, 80, 130, 185, 235],
+            "ReloadTime": [600, 575, 550, 525, 500],
             "Type": 0,
+            "Ability": 0,
             "Targets": 1,
             "BulletColor": 4915330,
             "Image": "tower_magic.png",
-            "Price": 200
+            "Price": [185, 374, 512, 674, 800]
         },
         {
             "Name": "Nature tower",
             "Key": "tower_nature",
             "BulletSpeed": 5,
             "Range": 100,
-            "Damage": 50,
-            "ReloadTime": 500,
+            "Damage": [55, 95, 145, 205, 275],
+            "ReloadTime": [600, 575, 550, 525, 500],
             "Type": 1,
+            "Ability": 0,
             "Targets": 2,
             "BulletColor": 16711680,
             "Image": "tower_nature.png",
-            "Price": 170
+            "Price": [165, 343, 486, 603, 712]
         }
     ],
     "monsters":[
