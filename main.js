@@ -3,11 +3,22 @@
 var IDE_HOOK = false;
 var VERSION = '2.6.2';
 
+var urlParam = function(name){
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if(results == null)
+    {
+        return null;
+    }
+
+    return results[1] || 0;
+}
+
 //game parameters
 var LIFE_START = 50;
 var WARMUP = 15;
 var INTERVAL = 60;
 var INTERVAL_COMPLETED = 5;
+var FACTOR = urlParam("factor") || 1;
 
 //types
 var SINGLE_TARGET = 0;
@@ -43,6 +54,17 @@ var score;
 var currentLevel;
 var countdown;
 var currentMoney;
+
+function agent()
+{
+    return {
+        life: LIFE_START,
+        money: money,
+        towers: buildings,
+        monsters: monsters,
+        level: level
+    }
+}
 
 function preload() 
 {
@@ -120,7 +142,7 @@ function displayStats(e)
 
 function showTowerStats(x, y)
 {
-    var tower = buildings[x + "_" + y];
+    var tower = buildings[x][y];
     var dataTower = data.towers.find(x => x.Key == tower.key);
 
     if(tower.level < 5)
@@ -163,7 +185,7 @@ function updateTowerStats(uid, x, y)
     var e = document.querySelector('[data-uid="' + uid + '"]');
     if(e != null)
     {
-        var tower = buildings[x + "_" + y];
+        var tower = buildings[x][y];
         var k = document.getElementById("kills");
         k.innerHTML = tower.kills;
     }
@@ -200,7 +222,10 @@ function create() {
 
     //database
     data = game.cache.getJSON('data');
-    setUpMenu();
+    if(FACTOR == 1)
+    {
+        setUpMenu();
+    }
 
     game.stage.backgroundColor = '#2d2d2d';
     game.world.setBounds(0, 0, 800, 704);
@@ -226,7 +251,7 @@ function create() {
     var static = game.add.text(630, 190, "Next wave in", { fontWeight: 'bolder'});
     static.addColor('white', 0);
 
-    countdown = game.add.text(667, 225, WARMUP + " sec", { fontWeight: 'bolder'});
+    countdown = game.add.text(667, 225, Math.round(WARMUP) + " sec", { fontWeight: 'bolder'});
     countdown.addColor('white', 0);
 
     //create groups
@@ -234,19 +259,30 @@ function create() {
     bullets = game.add.group();
     bars = game.add.group();
 
-    timer = new Timer(game, 1000, countdown);
-    timer.start(WARMUP);
+    if(FACTOR == 1)
+    {
+        timer = new Timer(game, 1000, countdown);
+        timer.start(Math.round(WARMUP));
+    }
+    else
+    {
+        timer = new Timer(game, 1000, null);
+        timer.start(1);
+    }
     //drawChecks();
 
     //special abilities handler
-    game.time.events.loop(250, function(){
+    game.time.events.loop(250 / FACTOR, function(){
         updateAbilities();
     }, this);
 
+    if(FACTOR == 1)
+    {
+        marker = game.add.graphics();
+        marker.lineStyle(2, 0x000000, 1);
+        marker.drawRect(0, 0, 32, 32);
+    }
 
-    marker = game.add.graphics();
-    marker.lineStyle(2, 0x000000, 1);
-    marker.drawRect(0, 0, 32, 32);
 }
 
 function buildTower(x, y, key)
@@ -267,7 +303,7 @@ function buildTower(x, y, key)
     sprite.damage = tower.Damage[0];
     sprite.ability = tower.Ability;
     sprite.anchor.set(0.5, 0.5);
-    sprite.reloadTime = tower.ReloadTime[0];
+    sprite.reloadTime = tower.ReloadTime[0] / FACTOR;
     sprite.reload = 0; //ready to shoot
     sprite.type = tower.Type;
     sprite.bulletColor = tower.BulletColor;
@@ -277,19 +313,22 @@ function buildTower(x, y, key)
 
     money -= tower.Price[0];
     towers.add(sprite);
-    buildings[x + "_" + y] = sprite;
+    if(!buildings[x])
+    {
+        buildings[x] = [];
+    }
+    buildings[x][y] = sprite;
 
-    showTowerStats(x, y);
+    if(FACTOR == 1)
+    {
+        showTowerStats(x, y);
+    }
 }
 
 function upgradeTower(x, y, key)
 {
-    var sprite = buildings[x + "_" + y];
+    var sprite = buildings[x][y];
     var tower = data.towers.find(x => x.Key == key);
-    if(typeof sprite === 'undefined')
-    {
-        return;
-    }
 
     if(sprite.level > 4)
     {
@@ -308,17 +347,16 @@ function upgradeTower(x, y, key)
     money -= tower.Price[sprite.level];
     sprite.level++; 
 
-    showTowerStats(x, y);
+    if(FACTOR == 1)
+    {
+        showTowerStats(x, y);
+    }
 }
 
 function previewUpgrade(x, y, key)
 {
-    var sprite = buildings[x + "_" + y];
+    var sprite = buildings[x][y];
     var tower = data.towers.find(x => x.Key == key);
-    if(typeof sprite === 'undefined')
-    {
-        return;
-    }
 
     if(sprite.level > 4)
     {
@@ -404,7 +442,7 @@ function spawn()
     var type = data.monsters[level % 7];
     for (var i = 0; i < 20; i++) 
     {
-        game.time.events.add(i * 500, spawnOne, this, hp, value, type);
+        game.time.events.add(i * 500 / FACTOR, spawnOne, this, hp, value, type);
     }
 }
 
@@ -475,7 +513,7 @@ function moveOne(monster)
 
     if(moveX > 0)
     {
-        monster.x += monster.speed;
+        monster.x += monster.speed * FACTOR;
         if(monster.x >= to[0])
         {
             monster.path++;
@@ -483,7 +521,7 @@ function moveOne(monster)
     }
     else if(moveX < 0)
     {
-        monster.x -= monster.speed;
+        monster.x -= monster.speed * FACTOR;
         if(monster.x <= to[0])
         {
             monster.path++;
@@ -492,7 +530,7 @@ function moveOne(monster)
 
     if(moveY > 0)
     {
-        monster.y += monster.speed;
+        monster.y += monster.speed * FACTOR;
         if(monster.y >= to[1])
         {
             monster.path++;
@@ -500,7 +538,7 @@ function moveOne(monster)
     }
     else if(moveY < 0)
     {
-        monster.y -= monster.speed;
+        monster.y -= monster.speed * FACTOR;
         if(monster.y <= to[1])
         {
             monster.path++;
@@ -520,7 +558,7 @@ function removeHP(monster, amount, sender)
     {
         killMonster(monster, sender);
     }
-    else
+    else if(FACTOR == 1)
     {
         drawHP(monster);
     }
@@ -534,7 +572,11 @@ function killMonster(monster, sender)
     {
         money += monster.value;
         sender.kills++;
-        updateTowerStats(sender.idx, sender.x, sender.y);
+        if(FACTOR == 1)
+        {
+            updateTowerStats(sender.idx, sender.x, sender.y);
+        }
+        
         monsters.splice(idx, 1);
     }    
 }
@@ -551,11 +593,14 @@ function monsterEndsCircuit(monster)
 
     if(LIFE_START == 0)
     {
-        game.destroy();
-        var r = confirm("You loose! Retry?");
-        if (r == true) 
+        if(FACTOR == 1)
         {
-            location.reload();
+            game.destroy();
+            var r = confirm("You loose! Retry?");
+            if (r == true) 
+            {
+                location.reload();
+            }
         }
     }
 }
@@ -566,8 +611,8 @@ function updateBullet(b)
     {
         var direction = [b.target.x - b.sender.x, b.target.y - b.sender.y];
 
-        b.x += direction[0] * b.speed * game.time.elapsed * 0.001;
-        b.y += direction[1] * b.speed * game.time.elapsed * 0.001;
+        b.x += direction[0] * b.speed * game.time.elapsed * 0.001 * FACTOR;
+        b.y += direction[1] * b.speed * game.time.elapsed * 0.001 * FACTOR;
     }
 
     if(Phaser.Math.distance(b.x, b.y, b.target.x, b.target.y) <= 16)
@@ -584,7 +629,7 @@ function applyAbilities(target, sender)
     var dice = Math.round(Math.random() * 10);
     if(sender.ability & SLOW && target.slow == null && (dice == 3 || dice == 6 || dice == 9))
     {
-        target.slow = new Timer(game, 1000, null);
+        target.slow = new Timer(game, 1000 / FACTOR, null);
         target.slow.start(3);
         target.slowRestore = target.speed;
         target.speed = target.speed * 0.4;
@@ -592,13 +637,13 @@ function applyAbilities(target, sender)
 
     if(sender.ability & STUN && target.stun == null && (dice == 2 || dice == 5 || dice == 8))
     {
-        target.stun = new Timer(game, 1000, null);
+        target.stun = new Timer(game, 1000 / FACTOR, null);
         target.stun.start(1);
     }
 
     if(sender.ability & DOT && target.dot == null && dice % 2 == 0)
     {
-        target.dot = new Timer(game, 1000, null);
+        target.dot = new Timer(game, 1000 / FACTOR, null);
         target.dot.start(3);
         target.dotDamage = sender.damage * 0.1 * 0.25;
         target.dotSender = sender;
@@ -641,7 +686,7 @@ function updateAbilities()
 
 function nextRound()
 {
-    timer.start(INTERVAL);
+    timer.start(INTERVAL / FACTOR);
     level++;
     money += level * 5;
     spawn();
@@ -662,7 +707,7 @@ function handleMouse()
         marker.revive();
         marker.removeChildren();
         var currentSelection = document.getElementsByClassName("selected-menu")[0];
-        var empty = (typeof buildings[(marker.x + 16) + "_" + (marker.y + 16)] === 'undefined');
+        var empty = buildings[(marker.x + 16)] == undefined || buildings[(marker.x + 16)][(marker.y + 16)] == undefined;
         if(empty) 
         {
             var sprite = game.add.sprite(6, 6, currentSelection.dataset.key);
@@ -695,7 +740,10 @@ function handleMouse()
 
 function update() 
 {
-    handleMouse();
+    if(FACTOR == 1)
+    {
+        handleMouse();
+    }
 
     monsters.forEach(moveOne);
 
@@ -703,10 +751,17 @@ function update()
     bullets.forEach(updateBullet);
 
     //level cleared
-    if(timer.timeElapsed >= INTERVAL_COMPLETED && level > 0 && monsters.length == 0)
+    if(timer.timeElapsed >= (INTERVAL_COMPLETED / FACTOR) && level > 0 && monsters.length == 0)
     {
-        timer.start(INTERVAL_COMPLETED);
-        game.time.events.add(INTERVAL_COMPLETED, nextRound, this);
+        if(FACTOR == 1)
+        {
+            timer.start(INTERVAL_COMPLETED);
+            game.time.events.add(INTERVAL_COMPLETED, nextRound, this);
+        }
+        else
+        {
+            nextRound();
+        }
     }
     //no more time
     else if(timer.isOver())

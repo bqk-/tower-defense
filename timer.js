@@ -12,7 +12,7 @@ var Timer = function(game, refreshInt, ph) {
 Timer.prototype.constructor = Timer;
 
 Timer.prototype.updateTimer = function(){
-    if(!this.totalTime || this.timeElapsed >= this.totalTime)
+    if(!this.totalTime)
     {
         return;
     }
@@ -25,7 +25,7 @@ Timer.prototype.updateTimer = function(){
     if(this.text != null)
         this.text.text = timeRemaining + " sec";
 
-    if(timeRemaining === 0)
+    if(timeRemaining <= 0)
     {
         this.end = true;
     }
