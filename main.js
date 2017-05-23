@@ -57,13 +57,36 @@ var currentMoney;
 
 function agent()
 {
-    return {
+    return addTowers({
         life: LIFE_START,
         money: money,
         towers: buildings,
-        monsters: monsters,
         level: level
+    });
+}
+
+function addTowers(obj)
+{
+    var tw = [];
+    var totalKills = 0;
+    for (var i = 0, len = towers.children.length; i < len; i++) 
+    {  
+        tw.push({
+            speed: towers.children[i].speed,
+            range:  towers.children[i].range,
+            damage: towers.children[i].damage,
+            ability: towers.children[i].ability,
+            reloadTime: towers.children[i].reloadTime,
+            type: towers.children[i].type,
+            kills: towers.children[i].kills,
+            level: towers.children[i].level
+        });
+        totalKills += towers.children[i].kills;
     }
+    obj.towers = tw;
+    obj.kills = totalKills;
+
+    return obj;
 }
 
 function preload() 
