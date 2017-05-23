@@ -49,6 +49,9 @@ var bullets;
 var money = 150;
 var buildings = [];
 
+var agentTowers = [];
+var agentKills = [];
+
 //texts
 var score;
 var currentLevel;
@@ -57,15 +60,18 @@ var currentMoney;
 
 function agent()
 {
-    return addTowers({
+
+    return {
         life: LIFE_START,
         money: money,
-        towers: buildings,
-        level: level
-    });
+        level: level,
+        towers: agentTowers,
+        kills: agentKills
+    };
+
 }
 
-function addTowers(obj)
+function generateAgentVariables()
 {
     var tw = [];
     var totalKills = 0;
@@ -79,14 +85,14 @@ function addTowers(obj)
             reloadTime: towers.children[i].reloadTime,
             type: towers.children[i].type,
             kills: towers.children[i].kills,
-            level: towers.children[i].level
+            level: towers.children[i].level,
+            x: towers.children[i].x,
+            y: towers.children[i].y
         });
         totalKills += towers.children[i].kills;
     }
-    obj.towers = tw;
-    obj.kills = totalKills;
-
-    return obj;
+    agentTowers = tw;
+    agentKills = totalKills;
 }
 
 function preload() 
@@ -341,6 +347,8 @@ function buildTower(x, y, key)
         buildings[x] = [];
     }
     buildings[x][y] = sprite;
+
+    generateAgentVariables();
 
     if(FACTOR == 1)
     {
