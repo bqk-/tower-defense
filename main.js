@@ -50,13 +50,14 @@ var money = 150;
 var buildings = [];
 
 var agentTowers = [];
-var agentKills = [];
+var agentKills = 0;
 
 //texts
 var score;
 var currentLevel;
 var countdown;
 var currentMoney;
+
 
 function agent()
 {
@@ -78,14 +79,7 @@ function generateAgentVariables()
     for (var i = 0, len = towers.children.length; i < len; i++) 
     {  
         tw.push({
-            speed: towers.children[i].speed,
-            range:  towers.children[i].range,
-            damage: towers.children[i].damage,
-            ability: towers.children[i].ability,
-            reloadTime: towers.children[i].reloadTime,
-            type: towers.children[i].type,
-            kills: towers.children[i].kills,
-            level: towers.children[i].level,
+            type: towers.children[i].key,
             x: towers.children[i].x,
             y: towers.children[i].y
         });
@@ -319,7 +313,7 @@ function buildTower(x, y, key)
     var tower = data.towers.find(x => x.Key == key);
     if(money < tower.Price[0])
     {
-        return;
+        return false;
     }
 
     var sprite = game.add.sprite(x, y, tower.Key);
@@ -354,6 +348,8 @@ function buildTower(x, y, key)
     {
         showTowerStats(x, y);
     }
+
+    return true;
 }
 
 function upgradeTower(x, y, key)
