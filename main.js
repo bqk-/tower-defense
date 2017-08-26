@@ -620,9 +620,9 @@ function monsterEndsCircuit(monster)
 
     if(LIFE_START == 0)
     {
+        game.destroy();
         if(FACTOR == 1)
         {
-            game.destroy();
             var r = confirm("You loose! Retry?");
             if (r == true) 
             {
