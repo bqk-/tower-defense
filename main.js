@@ -15,7 +15,7 @@ var urlParam = function(name){
 
 //game parameters
 var LIFE_START = 50;
-var WARMUP = 15;
+var WARMUP = 5;
 var INTERVAL = 60;
 var INTERVAL_COMPLETED = 5;
 var FACTOR = urlParam("factor") || 1;
@@ -282,16 +282,9 @@ function create() {
     bullets = game.add.group();
     bars = game.add.group();
 
-    if(FACTOR == 1)
-    {
-        timer = new Timer(game, 1000, countdown);
-        timer.start(Math.round(WARMUP));
-    }
-    else
-    {
-        timer = new Timer(game, 1000, null);
-        timer.start(1);
-    }
+    timer = new Timer(game, 1000, countdown);
+    timer.start(Math.round(WARMUP));
+    
     //drawChecks();
 
     //special abilities handler
@@ -459,6 +452,7 @@ function shootAt(tower, monster)
     bullet.idx = UID++;
     bullet.speed = tower.speed;
     bullet.sender = tower;
+    bullet.distance = 1000000;
     bullets.add(bullet);
 }
 
@@ -495,19 +489,22 @@ function spawnOne(hp, value, type)
     sprite.path = 0;
     sprite.anchor.set(0.5, 0.5);
 
-    var healthbar = game.add.graphics(0, 0);
-    healthbar.beginFill(0xFF0000, 1);
-    healthbar.drawRect(-40, -40, 80, 10);
+    if(FACTOR == 1)
+    {
+            var healthbar = game.add.graphics(0, 0);
+        healthbar.beginFill(0xFF0000, 1);
+        healthbar.drawRect(-40, -40, 80, 10);
 
-    var hpbar = game.add.graphics(0, 0);
-    hpbar.beginFill(0x00FF00, 1);
-    hpbar.drawRect(-40, -40, 80, 10);
+        var hpbar = game.add.graphics(0, 0);
+        hpbar.beginFill(0x00FF00, 1);
+        hpbar.drawRect(-40, -40, 80, 10);
 
-    sprite.hpbar = hpbar;
-    sprite.healthbar = healthbar;
+        sprite.hpbar = hpbar;
+        sprite.healthbar = healthbar;
 
-    sprite.addChild(healthbar);
-    sprite.addChild(hpbar);
+        sprite.addChild(healthbar);
+        sprite.addChild(hpbar);
+    }
 
     monsters.push(sprite);
 }
@@ -574,6 +571,7 @@ function moveOne(monster)
 
     if(monster.path + 1 == data.path.length)
     {
+        console.log("end")
         monsterEndsCircuit(monster);
     }
 }
@@ -620,9 +618,9 @@ function monsterEndsCircuit(monster)
 
     if(LIFE_START == 0)
     {
-        game.destroy();
         if(FACTOR == 1)
         {
+            game.destroy();
             var r = confirm("You loose! Retry?");
             if (r == true) 
             {
@@ -642,12 +640,18 @@ function updateBullet(b)
         b.y += direction[1] * b.speed * game.time.elapsed * 0.001 * FACTOR;
     }
 
-    if(Phaser.Math.distance(b.x, b.y, b.target.x, b.target.y) <= 16)
+    var dist = Phaser.Math.distance(b.x, b.y, b.target.x, b.target.y);
+
+    if(b.distance < dist)
     {
         removeHP(b.target, b.damage, b.sender);
         applyAbilities(b.target, b.sender);
         //play explosion
         bullets.remove(b);
+    }
+    else
+    {
+        b.distance = dist
     }
 }
 
@@ -688,7 +692,6 @@ function updateAbilities()
 
         if(monster.dot != null)
         {
-            console.log("dotting " + monster.dotDamage);
             removeHP(monster, monster.dotDamage, monster.dotSender);
 
             if(monster.dot.isOver())
